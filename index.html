@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Table with Google Sheets Integration</title>
+    <script src="https://apis.google.com/js/api.js"></script>
+    <script src="https://apis.google.com/js/client.js"></script>
+</head>
+<body>
+    <h1>Table with Google Sheets Integration</h1>
+    <table id="myTable">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Address</th>
+                <th>Phone Number</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><input type="text" name="name[]"></td>
+                <td><input type="text" name="address[]"></td>
+                <td><input type="text" name="phoneNumber[]"></td>
+            </tr>
+        </tbody>
+    </table>
+    <button id="addButton" type="button">Add Row</button>
+    <button id="submitButton" type="button">Submit</button>
+    <div id="response"></div>
+
+    <script>
+        var table = document.getElementById('myTable').getElementsByTagName('tbody')[0];
+
+        document.getElementById('addButton').addEventListener('click', addRow);
+        document.getElementById('submitButton').addEventListener('click', submitData);
+
+        function addRow() {
+            var newRow = table.insertRow();
+            var cell1 = newRow.insertCell(0);
+            var cell2 = newRow.insertCell(1);
+            var cell3 = newRow.insertCell(2);
+            cell1.innerHTML = '<input type="text" name="name[]">';
+            cell2.innerHTML = '<input type="text" name="address[]">';
+            cell3.innerHTML = '<input type="text" name="phoneNumber[]">';
+        }
+
+        function submitData() {
+            var rows = table.getElementsByTagName('tr');
+            var values = [];
+            for (var i = 0; i < rows.length; i++) {
+                var cells = rows[i].getElementsByTagName('td');
+                var rowValues = [];
+                for (var j = 0; j < cells.length; j++) {
+                    rowValues.push(cells[j].querySelector('input').value);
+                }
+                values.push(rowValues);
+            }
+
+            // Authenticate with the Google Sheets API
+            gapi.client.init({
+                apiKey: 'AIzaSyCpspPFERZ_5yBuiyDDd97Ok9VU1bU3VA4',
+                clientId: '483333167867-iihjqj17h2oqhos80c4pnorvn1uoh0k0.apps.googleusercontent.com',
+                discoveryDocs: ["https://sheets.googleapis.com/$discovery/rest?version=v4"],
+                scope: 'https://www.googleapis.com/auth/spreadsheets',
+            }).then(function () {
+                return gapi.auth2.getAuthInstance().signIn();
+            }).then(function () {
+                // Use the Google Sheets API to append data to your sheet
+                var sheets = gapi.client.sheets.spreadsheets.values;
+                sheets.append({
+                    spreadsheetId: '1brCFyTpH_Rg17t5tQy8uQpEt6bfa0WKjLZbZ69dSuSI',
+                    range: 'Sheet1', // Update with your sheet name
+                    valueInputOption: 'RAW',
+                    insertDataOption: 'INSERT_ROWS',
+                    values: values
+                }).then(function (response) {
+                    console.log(response);
+                    document.getElementById('response').textContent = 'Data submitted successfully.';
+                }, function (error) {
+                    console.error('Error submitting data:', error);
+                });
+            });
+        }
+    </script>
+</body>
+</html>
